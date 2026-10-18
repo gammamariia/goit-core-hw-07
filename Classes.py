@@ -48,7 +48,7 @@ class Phone(Field):
 class Birthday(Field):
     def __init__(self, value):
         try:
-            self.value = datetime.strptime(value, "%DD.%MM.%YYYY").date()
+            self.value = datetime.strptime(value, "%d.%m.%Y").date()
         except ValueError as exc:
             raise ValueError("Invalid date format. Use DD.MM.YYYY") from exc
         super().__init__(self.value)
@@ -84,9 +84,9 @@ class Record:
 
     def add_birthday(self, birthday):
         self.birthday = Birthday(birthday)
-        if not isinstance(birthday, Birthday):
-            birthday = Birthday(birthday)
-        self.birthday = Birthday(birthday)
+        # if not isinstance(birthday, Birthday):
+        # birthday = Birthday(birthday)
+        # self.birthday = Birthday(birthday)
 
     def __str__(self):
         phones_str = "; ".join(p.value for p in self.phones)
@@ -150,8 +150,8 @@ def input_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except ValueError:
-            return "Give me name and phone please."
+        except ValueError as e:
+            return e
         except IndexError:
             return "Enter user name."
         except KeyError:
@@ -202,16 +202,26 @@ def show_all(book):
 
 @input_error
 def add_birthday(args, book):
-    name, birthday = args
-    book[name] = birthday
     if len(args) < 2:
         return "Give me name and birthday please."
-    name, birthday = args[0], args[1]
+    name, birthday = args
     record = book.find(name)
-    if record:
-        record.add_birthday(birthday)
-        return "Birthday added."
-    return "Contact not found."
+    # book[name] = birthday
+    if record is None:
+        return "Contact not found."
+    record.add_birthday(birthday)
+    return "Birthday added."
+
+    # if len(args) < 2:
+    # return "Give me name and birthday please."
+
+
+# name, birthday = args[0], args[1]
+# record = book.find(name)
+# if record:
+# record.add_birthday(birthday)
+# return "Birthday added."
+# return "Contact not found."
 
 
 @input_error
@@ -270,6 +280,6 @@ def main():
         else:
             print("Invalid command.")
 
-    if __name__ == "__main__":
-        main()
-        
+
+if __name__ == "__main__":
+    main()
