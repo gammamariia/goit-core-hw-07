@@ -48,10 +48,10 @@ class Phone(Field):
 class Birthday(Field):
     def __init__(self, value):
         try:
-            date_value = datetime.strptime(value, "%d.%m.%Y").date()
+            datetime.strptime(value, "%d.%m.%Y")
+            super().__init__(value)
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
-        super().__init__(date_value)
 
 
 class Record:
@@ -89,7 +89,8 @@ class Record:
         phones_str = "; ".join(p.value for p in self.phones)
         result = f"Contact name: {self.name.value}, phones: {phones_str}"
         if self.birthday:
-            result += f", birthday: {self.birthday.value.strftime('%d-%m-%Y')}"
+            bday_obj = datetime.strptime(self.birthday.value, "%d.%m.%Y")
+            result += f", birthday: {bday_obj.strftime('%d.%m.%Y')}"
         return result
 
 
@@ -115,23 +116,28 @@ class AddressBook(UserDict):
             return self.find_next_weekday(birthday, 0)
         return birthday
 
-    def get_upcoming_birthdays(self, days=7, filter_weekend=True):
-        upcoming_birthdays = []
-        today = date.today()
-        for user in self.data.values():
-            if not user.birthday:
-                continue
-            birthday_this_year = user.birthday.value.replace(year=today.year)
-            if birthday_this_year < today:
-                birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+    # def get_upcoming_birthdays(self, days=7, filter_weekend=True):
+    # for user in self.data.values():
+    # if not user.birthday:
+    # continue
+    # birthday_this_year = user.birthday.value.replace(year=today.year)
+    # if birthday_this_year < today:
+    # birthday_this_year = birthday_this_year.replace(year=today.year + 1)
 
-            if 0 <= (birthday_this_year - today).days <= days:
-                congratulation_date = self.adjust_for_weekend(birthday_this_year)
-                birthday = Birthday(congratulation_date)
-                upcoming_birthdays.append(
-                    {"name": user.name.value, "congratulation_date": birthday}
-                )
-            return upcoming_birthdays
+    # if 0 <= (birthday_this_year - today).days <= days:
+    # congratulation_date = self.adjust_for_weekend(birthday_this_year)
+    # birthday = Birthday(congratulation_date)
+    # upcoming_birthdays.append(
+    # {"name": user.name.value, "congratulation_date": birthday}
+    # )
+    # return upcoming_birthdays
+    def get_upcoming_birthdays(self):
+        upcoming_birthdays = []
+        current_date = datetime.today().date()
+        for record in self.values():
+            if record.birthday:
+                bday_date = datetime.strptime(record.birthday.value, "%d.%m.%Y").date()
+        return upcoming_birthdays
 
     def __str__(self):
         return "\n".join(str(record) for record in self.data.values())
@@ -214,7 +220,7 @@ def show_birthday(args, book):
     record = book.find(name)
     if record.birthday is None:
         return f"{name} has no birthday set."
-    return f"{name}'s birthday is {record.birthday.value.strftime('%d-%m-%Y')}"
+    return f"{name}'s birthday is {record.birthday.value}"
 
 
 @input_error
@@ -229,7 +235,6 @@ def birthdays(book):
 
 
 def main():
-    print("Start")
     book = AddressBook()
     print("Welcome to the assistant bot!")
     while True:
