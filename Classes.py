@@ -116,27 +116,24 @@ class AddressBook(UserDict):
             return self.find_next_weekday(birthday, 0)
         return birthday
 
-    # def get_upcoming_birthdays(self, days=7, filter_weekend=True):
-    # for user in self.data.values():
-    # if not user.birthday:
-    # continue
-    # birthday_this_year = user.birthday.value.replace(year=today.year)
-    # if birthday_this_year < today:
-    # birthday_this_year = birthday_this_year.replace(year=today.year + 1)
-
-    # if 0 <= (birthday_this_year - today).days <= days:
-    # congratulation_date = self.adjust_for_weekend(birthday_this_year)
-    # birthday = Birthday(congratulation_date)
-    # upcoming_birthdays.append(
-    # {"name": user.name.value, "congratulation_date": birthday}
-    # )
-    # return upcoming_birthdays
     def get_upcoming_birthdays(self):
         upcoming_birthdays = []
         current_date = datetime.today().date()
         for record in self.values():
             if record.birthday:
-                bday_date = datetime.strptime(record.birthday.value, "%d.%m.%Y").date()
+                bday = datetime.strptime(record.birthday.value, "%d.%m.%Y").date()
+                bday_this_year = bday.replace(year=current_date.year)
+                if bday_this_year < current_date:
+                    bday_this_year = bday_this_year.replace(year=current_date.year + 1)
+                birthday_adjusted = self.adjust_for_weekend(bday_this_year)
+                delta_days = (birthday_adjusted - current_date).days
+                if 0 <= delta_days <= 7:
+                    upcoming_birthdays.append(
+                        {
+                            "name": record.name.value,
+                            "birthday": birthday_adjusted.strftime("%d.%m.%Y"),
+                        }
+                    )
         return upcoming_birthdays
 
     def __str__(self):
